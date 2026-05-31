@@ -33,7 +33,7 @@ export class PortfolioEntity {
         return this._techStack;
     }
 
-    get svPath(): string | undefined {
+    get cvPath(): string | undefined {
         return this._cvPath;
     }
 }

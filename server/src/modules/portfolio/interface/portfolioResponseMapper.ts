@@ -10,7 +10,7 @@ export class PortfolioResponseMapper {
             location: portfolio.location,
             techStack: portfolio.techStack,
             role: portfolio.role,
-            cvPath: portfolio.svPath
+            cvPath: portfolio.cvPath
         }
     }
 

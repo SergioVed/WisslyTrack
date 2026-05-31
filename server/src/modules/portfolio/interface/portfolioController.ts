@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Put, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Post, Put, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from "@nestjs/common";
 import { PortfolioService } from "../core/portfolioService";
 import { CreatePortfolioDto, UpdatePortfolioDto } from "./types";
 import { Request } from "express";
@@ -7,6 +7,7 @@ import { AuthGuard } from "../../../guards/authGuard";
 import { PortfolioResponseMapper } from "./portfolioResponseMapper";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { SupabaseService } from "../infrastructure/supabaseService";
+import { UserService } from "../../users/core/userService";
 
 type AuthenticatedRequest = Request & {
     user: AuthenticatedUser
@@ -17,7 +18,8 @@ export class PortfolioController{
 
     constructor(
         private portfolioService: PortfolioService,
-        private supabaseService: SupabaseService
+        private supabaseService: SupabaseService,
+        private userService: UserService
     ){}
 
     @Post()
@@ -52,6 +54,27 @@ export class PortfolioController{
         const updatedPortfolio = await this.portfolioService.update({cvPath: path}, req.user.id)
 
         return PortfolioResponseMapper.toResponse(updatedPortfolio)
+    }
+
+    @Get("/cv-review")
+    @UseGuards(AuthGuard)
+    async reviewCv(
+        @Req() req: AuthenticatedRequest
+    ){
+        const user = await this.userService.getById(req.user.id)
+
+        const portfolio = user.portfolio()
+
+        if (!portfolio) {
+            throw new BadRequestException("There is no portfolio")
+        }
+
+        if (!portfolio.cvPath) {
+            throw new BadRequestException("There is no cv")
+        }
+    
+        const fileText = await this.supabaseService.getFileText(portfolio.cvPath);
+        return fileText
     }
 
 }
